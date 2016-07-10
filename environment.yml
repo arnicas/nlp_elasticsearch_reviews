@@ -1,0 +1,84 @@
+name: esnlp
+dependencies:
+- appnope=0.1.0=py27_0
+- backports=1.0=py27_0
+- backports_abc=0.4=py27_0
+- boto=2.40.0=py27_0
+- bz2file=0.98=py27_0
+- configparser=3.5.0b2=py27_1
+- cycler=0.10.0=py27_0
+- decorator=4.0.10=py27_0
+- entrypoints=0.2=py27_1
+- freetype=2.5.5=1
+- functools32=3.2.3.2=py27_0
+- gensim=0.12.4=np111py27_0
+- get_terminal_size=1.0.0=py27_0
+- ipykernel=4.3.1=py27_0
+- ipython=4.2.0=py27_1
+- ipython_genutils=0.1.0=py27_0
+- ipywidgets=4.1.1=py27_0
+- jinja2=2.8=py27_1
+- jsonschema=2.5.1=py27_0
+- jupyter=1.0.0=py27_3
+- jupyter_client=4.2.2=py27_0
+- jupyter_console=4.1.1=py27_0
+- jupyter_core=4.1.0=py27_0
+- libpng=1.6.22=0
+- markupsafe=0.23=py27_2
+- matplotlib=1.5.1=np111py27_0
+- mistune=0.7.2=py27_1
+- mkl=11.3.3=0
+- nbconvert=4.2.0=py27_0
+- nbformat=4.0.1=py27_0
+- nltk=3.2.1=py27_0
+- notebook=4.2.1=py27_0
+- numpy=1.11.0=py27_1
+- openssl=1.0.2h=1
+- pandas=0.18.1=np111py27_0
+- path.py=8.2.1=py27_0
+- pathlib2=2.1.0=py27_0
+- pexpect=4.0.1=py27_0
+- pickleshare=0.7.2=py27_0
+- pip=8.1.2=py27_0
+- ptyprocess=0.5.1=py27_0
+- pygments=2.1.3=py27_0
+- pyparsing=2.1.4=py27_0
+- pyqt=4.11.4=py27_3
+- python=2.7.11=0
+- python-dateutil=2.5.3=py27_0
+- python.app=1.2=py27_4
+- pytz=2016.4=py27_0
+- pyzmq=15.2.0=py27_1
+- qt=4.8.7=3
+- qtconsole=4.2.1=py27_0
+- readline=6.2=2
+- requests=2.10.0=py27_0
+- scipy=0.17.1=np111py27_0
+- seaborn=0.7.0=py27_0
+- setuptools=23.0.0=py27_0
+- simplegeneric=0.8.1=py27_1
+- singledispatch=3.4.0.3=py27_0
+- sip=4.16.9=py27_0
+- six=1.10.0=py27_0
+- smart_open=1.3.3=py27_0
+- sqlite=3.13.0=0
+- ssl_match_hostname=3.4.0.2=py27_1
+- terminado=0.6=py27_0
+- tk=8.5.18=0
+- tornado=4.3=py27_1
+- traitlets=4.2.1=py27_0
+- wheel=0.29.0=py27_0
+- zlib=1.2.8=3
+- pip:
+  - backports-abc==0.4
+  - backports.shutil-get-terminal-size==1.0.0
+  - backports.ssl-match-hostname==3.4.0.2
+  - elasticsearch==2.3.0
+  - ipython-genutils==0.1.0
+  - jupyter-client==4.2.2
+  - jupyter-console==4.1.1
+  - jupyter-core==4.1.0
+  - smart-open==1.3.3
+  - urllib3==1.16
+prefix: /Users/lynn/miniconda/envs/esnlp
+

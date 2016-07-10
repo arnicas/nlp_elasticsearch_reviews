@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<style>
+body {
+  font-size: 10pt;
+  margin: 50px;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.hits, .businesses {
+  font-size: 9pt;
+  color: dimgray;
+  max-width: 600px;
+}
+
+button {
+  margin-left: 10px;
+}
+
+input {
+  padding-right: 20px;
+}
+
+.indent {
+  margin-left: 20px;
+}
+
+.result {
+  font-style: italic;
+  margin-left: 30px;
+  line-height: .95em;
+  color: steelblue;
+}
+
+.getmore {
+  color: steelblue;
+  font-style: bold;
+  text-decoration: none;
+}
+
+</style>
+
+<body>
+
+<input id="search" size="25"></input><button>Search</button>
+<div class="yoursearch"></div>
+
+<div id="loader"><img src="giphy.gif"></div>
+
+<div class="businesses">
+</div>
+
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<!--<script src="elasticsearch-js/elasticsearch.jquery.min.js"></script> -->
+<script src="elasticsearch-js/elasticsearch.js"></script>
+<script>
+
+// for it to work with your localhost without a CORS error, you have to set up
+// your es config yaml file to allow it.
+
+var client = new elasticsearch.Client({
+  host: "localhost:9200",
+  log: "trace"
+});
+
+var lookupStarResults = {};
+var searchText = "";
+
+$("#loader").toggle(false);
+
+function searchAll(text) {
+
+  client.search({
+    index: "yelp",
+    type: "review",
+    body: {
+      query: {
+        match: {
+          text: {
+            query: text,
+            operator: "and"
+          }
+        }
+      },
+      aggs : {
+        businesses : {
+            terms : {
+              field : "business_id",
+              order: [ { _count: "desc"}, { stars: "desc"}]
+            },
+            aggs: {
+              stars: {
+                avg : { field: "stars" }
+              }
+            }
+        }
+    }
+  }
+  }).then(function (resp) {
+      var aggs = resp.aggregations;
+      getBusiness(aggs); // for each business, we'll print stuff.
+  }, function (err) {
+      console.trace(err.message);
+  });
+
+}
+function searchOne(searchtext, id) {
+
+  console.log("searchtext", searchtext);
+
+  client.search({
+    index: "yelp",
+    type: "review",
+    body: {
+      query: {
+        filtered: {
+          query: {
+            match: {
+              text: {
+                query: searchtext,
+                operator: "and"
+              }
+            }
+          },
+          filter: {
+            term: { business_id: id }
+          }
+        }
+      },
+      sort: [
+        { date: { order: "desc"}},
+        { _score: { order: "desc"}}
+        ]
+      }
+  }).then(function (resp) {
+      var hits = resp.hits.hits;
+      printHits(hits, id);
+  }, function (err) {
+      console.trace(err.message);
+  });
+
+}
+
+
+$("button").click(function() {
+  var string = $("#search").val();
+  $(".yoursearch").text("Your search: " + string);
+  $("#search").val("");
+  searchText = string;
+  $(".businesses").html("");
+  $("#loader").toggle(true);
+  searchAll(string);
+});
+
+
+function printHits(hits, id) {
+  // prints search text results for a business id
+  $(".hits").html(""); // empty all other results
+  $("a.getmore").toggle(true);
+  $("a.getmore#id" + id).toggle(false); // hide current link
+  $(".hits#id" + id).append("<h3 class='indent'>Sample Reviews <a class='close' href='#'>(close)</a></h3>");
+  if (hits.length == 0) {
+    $(".hits#id." + id).append("<p class='result'>(None found.)</p>");
+    return;
+  }
+  hits.forEach(function(h) {
+      $(".hits#id" + id).append("<p class='result'>(" + h._source.date + ", stars: " + h._source.stars + ") " + h._source.text + "</p>");
+  });
+
+  $("a.close").click(function() {
+    console.log("clicked");
+    $(".hits").html(""); // empty all other results
+    $("a.getmore").toggle(true);
+  });
+}
+
+function getBusiness(aggs) {
+
+  aggs.businesses.buckets.forEach(function(biz) {
+
+    lookupStarResults[biz.key] = { avg: biz.stars.value, count: biz.doc_count};
+
+    client.search({
+      index: "yelp",
+      type: "business",
+      body: {
+        query: {
+          constant_score: {
+            filter: {
+                term: {
+                  business_id: biz.key
+                }
+              }
+            }
+        }
+      }
+    }).then(function (resp) {
+      var hits = resp.hits.hits;
+      printBusiness(hits);
+      }, function (err) {
+      console.trace(err.message);
+      });
+
+  }); // end aggs each
+
+}
+
+function round(num) {
+  return Math.round(num * 100) / 100;
+}
+
+function printBusiness(hits) {
+
+  $("#loader").toggle(false);
+
+  hits.forEach(function(h) {
+    var countMatch = lookupStarResults[h._source.business_id].count;
+    var starMatchAvg = lookupStarResults[h._source.business_id].avg;
+      $(".businesses").append("<p><b>" + h._source.fake_name +
+        "</b>, total reviews: " + h._source.reviews + ", overall avg stars: " + round(h._source.stars_mean,2) +
+        "<\p><p class='indent'>Review count with those words: " + countMatch + ", Stars for reviews with those words: " + round(starMatchAvg) +
+        "</p><p class='indent'>" +
+        "<a href='#' class='getmore' id='id" + h._source.business_id + "'>Sample Reviews</a>" +
+        "<div class='hits' id='id" + h._source.business_id + "'</div>" +
+        "</p>");
+
+      // set up handler for each separately - easiest due to promises situation
+      // id's can't start with numbers, so use an id: in front of the actual id.
+      $("a#id" + h._source.business_id).click(function(){
+          var id = $(this).attr("id");
+          id = id.substr(2, id.length);  // part after id
+          console.log(id);
+          searchOne(searchText, id);
+          return true;
+          });
+  });
+
+
+}
+
+</script>
+
+</body>
+</html>

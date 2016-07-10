@@ -1,0 +1,310 @@
+GET yelp/reviews/
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+GET /_cat/indices?v
+
+GET yelp/business/_search?q=DcrM4hwDcU2G6vuh2cnaYQ
+
+GET /yelp/review/_mapping
+
+GET /yelp/review/_search
+{
+    "query": "pizza"
+}
+
+# fails, which it should
+GET /yelp/review/_search
+{
+  "query": {
+    "fuzzy": {
+      "text_orig": "piza"
+    }
+  }
+}
+
+# succeeds but hits pita jungle instead
+GET /yelp/review/_search
+{
+  "query": {
+    "fuzzy": {
+      "text": "piza"
+    }
+  }
+}
+
+
+GET /yelp/review/_search
+{
+    "query" : {
+        "match" : {
+            "text" : "amazing bar cocktails fun"
+        }
+    },
+    "aggs" : {
+      "businesses" : {
+            "terms" : {
+              "field" : "business_id"
+            }
+        }
+    }
+}
+
+GET /yelp/review/_search
+{
+    "query" : {
+        "match" : {
+            "text" : "gluten-free"
+        }
+    },
+    "aggs" : {
+      "businesses" : {
+            "terms" : {
+              "field" : "business_id"
+            }
+        }
+    }
+}
+
+# exact match on field: https://www.elastic.co/guide/en/elasticsearch/guide/master/_finding_exact_values.html
+# requires not indexed field for the match
+GET /yelp/business/_search 
+{
+  "query": {
+    "constant_score" : { 
+        "filter" : {
+            "term" : { 
+                      "business_id" : "6imLt53br7SJ3av07jjH7w"
+                    }
+            }
+        }
+  }
+}
+
+# some range queries and booleans
+GET /yelp/business/_search
+{
+   "query" : {
+     "constant_score" : {
+         "filter" : {
+            "bool" : {
+              "must" : {
+                    "range" : {
+                      "reviews" : {
+                          "gte" : 20
+                      }
+                  }},
+              "should" : [
+                {  "range" : {
+                      "sent_per_token_median" : {
+                          "gte": 0.048
+                      }
+                  }
+                },
+                {  "range" : {
+                      "stars_mean" : {
+                          "gte" : 4
+                      }
+                  }
+                }
+              ],
+              "must_not" : {
+                "range" : {
+                      "stars_mean" : {
+                          "lte" : 3.9
+                      }
+                  }
+              }
+           }
+         }
+      }
+  }
+}
+
+
+# without the requirement that both words match, 69K hits
+GET /yelp/review/_search
+{
+    "query": {
+        "match": {
+            "text": {      
+                "query":    "good pizza"
+            }
+        }
+    },
+    "aggs" : {
+      "businesses" : {
+            "terms" : {
+              "field" : "business_id"
+            }
+        }
+    }
+}
+
+# with the requirement that both words match, 4.9K hits
+GET /yelp/review/_search
+{
+    "query": {
+        "match": {
+            "text": {
+                "query":    "good pizza",
+                "operator": "and"
+            }
+        }
+    },
+    "aggs" : {
+      "businesses" : {
+            "terms" : {
+              "field" : "business_id"
+            }
+        }
+    }
+}
+
+# multiple order criteria, using multiple aggs: sort by count then star avg on ones matching.
+GET /yelp/review/_search
+{
+    "query": {
+        "match": {
+            "text": {      
+                "query":    "good pizza cocktail",
+                "operator": "and"
+            }
+        }
+    },
+    "aggs" : {
+        "businesses" : {
+            "terms" : {
+                "field" : "business_id",
+                "order" : [
+                  { "_count" : "desc" },
+                  {"stars": "desc" }
+                  ]
+            },
+            "aggs" : {
+                "stars" : {
+                    "avg" : { "field" : "stars" }
+                  }
+              }
+          }
+      }
+}
+
+
+GET /yelp/review/_search
+{
+  "query": {
+    "bool": {
+      "must":     { "match": { "text": "pizza" }},
+      "must_not": { "match": { "text": "bad"  }},
+      "should": [
+                  { "match": { "text": "cocktail" }},
+                  { "match": { "text": "bar"   }}
+      ]
+    }
+  }
+}
+
+# limit a search to a business id!
+GET /yelp/review/_search
+{
+  "query": {
+    "filtered": { 
+      "query": {
+        "match": { "text": "good pizza" }
+      },
+      "filter": {
+        "term" : {
+            "business_id" : "6imLt53br7SJ3av07jjH7w"
+                  }
+            }
+      }
+    }
+  }
+
+# sort by date then score:
+GET /yelp/review/_search
+{
+  "query": {
+    "filtered": { 
+      "query": {
+        "match": { "text": "good pizza" }
+      },
+      "filter": {
+        "term" : {
+            "business_id" : "6imLt53br7SJ3av07jjH7w"
+                  }
+            }
+      }
+    },
+    "sort": [
+        { "date":   { "order": "desc" }},
+        { "_score": { "order": "desc" }}
+    ]
+  }
+
+# multimatch
+
+GET /yelp/review/_search
+{
+   "query": {
+        "multi_match": {
+            "query":       "Margaritas are fantastic.",
+            "type":        "most_fields",
+            "fields":      [ "text", "text_orig" ] 
+        }
+    }
+}
+
+GET /yelp/review/_search
+{
+   "query": {
+        "multi_match": {
+            "query":       "pizza-cookie",
+            "type":        "most_fields",
+            "fields":      [ "text", "text_orig" ] 
+        }
+    },
+    "aggs" : {
+        "businesses" : {
+            "terms" : {
+                "field" : "business_id",
+                "order" : [
+                  { "_count" : "desc" },
+                  {"stars": "desc" }
+                  ]
+            },
+            "aggs" : {
+                "stars" : {
+                    "avg" : { "field" : "stars" }
+                  }
+              }
+          }
+      }
+}
+
+
+
+GET /yelp/review/_search
+{
+  "query": {
+    "filtered": {
+      "query": {
+        "multi_match": {
+          "query": "pizza-cookie",
+          "type": "most_fields",
+          "fields": ["text", "text_orig"]
+        }
+      },
+      "filter": {
+        "term" : {
+            "business_id" : "kFVapB4z_5VoOnYazF_ERA"
+                  }
+      }
+    }
+  }
+}
+

@@ -9,3 +9,16 @@ Three parts:
 * Web demo using the elasticsearch-js library.
 
 All of them assume localhost usage.  Also, online slides to go with: http://ghostweather.slides.com/lynncherny/deck-6.
+
+### Python Environment
+
+Install and use miniconda from Continuum. Create your environment with:
+
+```` 
+conda env create -f environment.yml
+[.... say yes to everything...]
+source activate esnlp
+````
+
+It's called "esnlp".
+

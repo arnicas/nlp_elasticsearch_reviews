@@ -52,7 +52,6 @@ input {
 </div>
 
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-<!--<script src="elasticsearch-js/elasticsearch.jquery.min.js"></script> -->
 <script src="elasticsearch-js/elasticsearch.js"></script>
 <script>
 
@@ -67,7 +66,7 @@ var client = new elasticsearch.Client({
 var lookupStarResults = {};
 var searchText = "";
 
-$("#loader").toggle(false);
+$("#loader").toggle(false); // turn off spinner till a search is executed
 
 function searchAll(text) {
 
@@ -141,18 +140,6 @@ function searchOne(searchtext, id) {
   });
 
 }
-
-
-$("button").click(function() {
-  var string = $("#search").val();
-  $(".yoursearch").text("Your search: " + string);
-  $("#search").val("");
-  searchText = string;
-  $(".businesses").html("");
-  $("#loader").toggle(true);
-  searchAll(string);
-});
-
 
 function printHits(hits, id) {
   // prints search text results for a business id
@@ -230,14 +217,22 @@ function printBusiness(hits) {
       $("a#id" + h._source.business_id).click(function(){
           var id = $(this).attr("id");
           id = id.substr(2, id.length);  // part after id
-          console.log(id);
           searchOne(searchText, id);
           return true;
           });
   });
-
-
 }
+
+$("button").click(function() {
+  var string = $("#search").val();
+  $(".yoursearch").text("Your search: " + string);
+  $("#search").val("");
+  searchText = string;
+  $(".businesses").html("");
+  $("#loader").toggle(true);
+  searchAll(string);
+});
+
 
 </script>
 

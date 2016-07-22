@@ -3,6 +3,8 @@
 Conference talk materials for the Dato/Turi data science symposium in SF, July 12-13, 2016.
 Online slides to go with: http://ghostweather.slides.com/lynncherny/deck-6.
 
+This talk is really a long tutorial -- how to go from a giant mess of data to a search app on the web.  The ES api is a little tricky and there aren't a lot of good end-to-end tutorials and use cases out there.  If you are Python fluent, this will get you to the web.
+
 Three parts:
 
 * 1. Mostly pandas exploratory analysis of Yelp  eviews in Python, and some simple NLP.  Create dataframes that can be read into Elasticsearch.  Simple sentiment by dictionary.  Trends over time, and other exploration including aggregations by user and business. This is the **["1. Yelp Reviews Explored in Python"](https://github.com/arnicas/nlp_elasticsearch_reviews/blob/master/1.%20Yelp%20Reviews%20Explored%20in%20Python.ipynb)** notebook.
